@@ -16,6 +16,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -32,8 +34,12 @@ fun LandingScreen(viewModel: LandingViewModel = viewModel()) {
         }
     )
 
+    val hasLocationPermission by viewModel.hasLocationPermission.collectAsState()
+    val locationAddress by viewModel.locationAddress.collectAsState()
+    val weatherInfo by viewModel.weatherInfo.collectAsState()
+
     LaunchedEffect(Unit) {
-        if (!viewModel.hasLocationPermission) {
+        if (!hasLocationPermission) {
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
@@ -46,7 +52,7 @@ fun LandingScreen(viewModel: LandingViewModel = viewModel()) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = viewModel.locationAddress,
+            text = locationAddress,
             modifier = Modifier.padding(top = 8.dp),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodySmall
@@ -54,25 +60,27 @@ fun LandingScreen(viewModel: LandingViewModel = viewModel()) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        viewModel.weatherInfo?.let { weatherInfo ->
+        weatherInfo?.let {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = weatherInfo.weatherDescription,
+                    text = it.weatherDescription,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Icon(
-                    painter = painterResource(id = weatherInfo.weatherIcon),
-                    contentDescription = weatherInfo.weatherDescription,
+                    painter = painterResource(id = it.weatherIcon),
+                    contentDescription = it.weatherDescription,
                     modifier = Modifier.size(128.dp)
                 )
                 Text(
-                    text = "${weatherInfo.temperature}°C",
+                    text = "${it.temperature}°C",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
 
-        if (!viewModel.hasLocationPermission) {
+
+        // The button is only shown if permission is denied, allowing the user to retry.
+        if (!hasLocationPermission) {
             Button(
                 onClick = {
                     permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)

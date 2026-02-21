@@ -4,9 +4,6 @@ import android.Manifest
 import android.app.Application
 import android.content.pm.PackageManager
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,6 +12,9 @@ import com.ozansan.weatherexampleapp.geo.LocationClient
 import com.ozansan.weatherexampleapp.network.WeatherCodeMapper
 import com.ozansan.weatherexampleapp.network.WeatherInfo
 import com.ozansan.weatherexampleapp.network.WeatherRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -29,40 +29,40 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
     private val geocodingRepository = GeocodingRepository(app)
     private val weatherRepository = WeatherRepository()
 
-    var locationAddress by mutableStateOf("Awaiting location permission...")
-        private set
+    private val _locationAddress = MutableStateFlow("Awaiting location permission...")
+    val locationAddress: StateFlow<String> = _locationAddress.asStateFlow()
 
     private var lastFetchedAddress: String? = null
 
-    var weatherInfo by mutableStateOf<WeatherInfo?>(null)
-        private set
+    private val _weatherInfo = MutableStateFlow<WeatherInfo?>(null)
+    val weatherInfo: StateFlow<WeatherInfo?> = _weatherInfo.asStateFlow()
 
-    var hasLocationPermission by mutableStateOf(checkPermission())
-        private set
+    private val _hasLocationPermission = MutableStateFlow(checkPermission())
+    val hasLocationPermission: StateFlow<Boolean> = _hasLocationPermission.asStateFlow()
 
     init {
         // If permission is already granted when the ViewModel is created, start listening.
-        if (hasLocationPermission) {
+        if (_hasLocationPermission.value) {
             startLocationUpdates()
         }
     }
 
     fun onPermissionResult(isGranted: Boolean) {
-        hasLocationPermission = isGranted
+        _hasLocationPermission.value = isGranted
         if (isGranted) {
             startLocationUpdates()
         } else {
-            locationAddress = "Location permission denied."
+            _locationAddress.value = "Location permission denied."
         }
     }
 
     private fun startLocationUpdates() {
-        if (!hasLocationPermission) {
-            locationAddress = "Location permission not granted."
+        if (!_hasLocationPermission.value) {
+            _locationAddress.value = "Location permission not granted."
             return
         }
 
-        locationAddress = "Fetching location..."
+        _locationAddress.value = "Fetching location..."
 
         // The 'onEach' block will be called every time a new location is emitted.
         locationClient.getLocationUpdates()
@@ -77,7 +77,7 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
                     "Could not find address for location."
                 }
 
-                locationAddress = newLocationAddress
+                _locationAddress.value = newLocationAddress
 
                 if (newLocationAddress != lastFetchedAddress) {
                     lastFetchedAddress = newLocationAddress
@@ -112,7 +112,7 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
                                 val sunrise = weatherData.dailyData.sunrise[0]
                                 val sunset = weatherData.dailyData.sunset[0]
                                 val isDay = WeatherCodeMapper.isDay(sunrise, sunset)
-                                weatherInfo = WeatherInfo(
+                                _weatherInfo.value = WeatherInfo(
                                     temperature = weatherData.hourlyData.temperature[weatherIndex],
                                     weatherDescription = WeatherCodeMapper.toText(weatherCode),
                                     precipitationProbability = weatherData.hourlyData.precipitationProbability[weatherIndex],
@@ -127,7 +127,7 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
                 }
             }
             .catch { e ->
-                locationAddress = "Error fetching location: ${e.message}"
+                _locationAddress.value = "Error fetching location: ${e.message}"
             }
             .launchIn(viewModelScope)
     }
