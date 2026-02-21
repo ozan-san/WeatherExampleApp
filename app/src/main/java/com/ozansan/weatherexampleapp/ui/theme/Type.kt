@@ -38,7 +38,7 @@ val Typography = Typography(
     bodySmall = TextStyle(
         fontFamily = vt323FontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
+        fontSize = 30.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.5.sp
     ),

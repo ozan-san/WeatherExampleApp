@@ -49,7 +49,7 @@ fun LandingScreen(viewModel: LandingViewModel = viewModel()) {
             text = viewModel.locationAddress,
             modifier = Modifier.padding(top = 8.dp),
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodySmall
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -58,7 +58,7 @@ fun LandingScreen(viewModel: LandingViewModel = viewModel()) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = weatherInfo.weatherDescription,
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodyMedium
                 )
                 Icon(
                     painter = painterResource(id = weatherInfo.weatherIcon),
