@@ -1,6 +1,5 @@
 package com.ozansan.weatherexampleapp.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,9 +11,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = White,
+    onPrimary = Black,
+    secondary = White,
+    onSecondary = Black,
+    tertiary = White,
+    onTertiary = Black,
+    background = Black,
+    onBackground = White,
+    surface = Black,
+    onSurface = White,
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -37,7 +43,7 @@ private val LightColorScheme = lightColorScheme(
 fun WeatherExampleAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.ozansan.weatherexampleapp.landing.LandingScreen
 import com.ozansan.weatherexampleapp.ui.theme.WeatherExampleAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -22,16 +23,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             WeatherExampleAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Greeting(
-                            name = "Android",
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
+                Scaffold(modifier = Modifier.fillMaxSize()) { _ ->
+                    LandingScreen()
                 }
             }
         }

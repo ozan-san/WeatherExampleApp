@@ -15,26 +15,34 @@ val provider = GoogleFont.Provider(
     certificates = R.array.com_google_android_gms_fonts_certs
 )
 
-val lobsterTwo = GoogleFont("VT323")
+val vt323Font = GoogleFont("VT323")
 
-val lobsterTwoFontFamily = FontFamily(
-    Font(googleFont = lobsterTwo, fontProvider = provider)
+val vt323FontFamily = FontFamily(
+    Font(googleFont = vt323Font, fontProvider = provider)
 )
 val Typography = Typography(
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = vt323FontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
+        fontSize = 60.sp,
+        lineHeight = 50.sp,
         letterSpacing = 0.5.sp
     ),
     bodyMedium = TextStyle(
-        fontFamily = lobsterTwoFontFamily,
+        fontFamily = vt323FontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 60.sp,
-        lineHeight = 24.sp,
+        lineHeight = 60.sp,
         letterSpacing = 0.5.sp
-    )
+    ),
+    bodySmall = TextStyle(
+        fontFamily = vt323FontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 20.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.5.sp
+    ),
+
     /* Other default text styles to override
     titleLarge = TextStyle(
         fontFamily = FontFamily.Default,
