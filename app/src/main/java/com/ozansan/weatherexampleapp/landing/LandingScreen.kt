@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ozansan.weatherexampleapp.landing.bottombar.LandingBottomBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +43,7 @@ fun LandingScreen(viewModel: LandingViewModel = viewModel()) {
     val hasLocationPermission by viewModel.hasLocationPermission.collectAsState()
     val locationAddress by viewModel.locationAddress.collectAsState()
     val weatherInfo by viewModel.weatherInfo.collectAsState()
+    val weeklyWeatherInfo by viewModel.weeklyWeatherInfo.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -87,6 +89,10 @@ fun LandingScreen(viewModel: LandingViewModel = viewModel()) {
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
+            }
+
+            weeklyWeatherInfo?.let {
+                LandingBottomBar(it)
             }
 
 

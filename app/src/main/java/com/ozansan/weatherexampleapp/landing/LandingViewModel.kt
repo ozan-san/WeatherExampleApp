@@ -9,9 +9,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ozansan.weatherexampleapp.geo.GeocodingRepository
 import com.ozansan.weatherexampleapp.geo.LocationClient
+import com.ozansan.weatherexampleapp.landing.state.DailyWeatherInfo
 import com.ozansan.weatherexampleapp.network.WeatherCodeMapper
-import com.ozansan.weatherexampleapp.network.WeatherInfo
+import com.ozansan.weatherexampleapp.landing.state.WeatherInfo
 import com.ozansan.weatherexampleapp.network.WeatherRepository
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +23,9 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
 
@@ -35,6 +41,9 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
 
     private val _weatherInfo = MutableStateFlow<WeatherInfo?>(null)
     val weatherInfo: StateFlow<WeatherInfo?> = _weatherInfo.asStateFlow()
+
+    private val _weeklyWeatherInfo = MutableStateFlow<ImmutableList<DailyWeatherInfo>?>(null)
+    val weeklyWeatherInfo: StateFlow<ImmutableList<DailyWeatherInfo>?> = _weeklyWeatherInfo.asStateFlow()
 
     private val _hasLocationPermission = MutableStateFlow(checkPermission())
     val hasLocationPermission: StateFlow<Boolean> = _hasLocationPermission.asStateFlow()
@@ -107,6 +116,27 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
                                 precipitationProbability = weatherData.current.rain.toInt(),
                                 weatherIcon = WeatherCodeMapper.toIcon(weatherData.current.weatherCode, isDay)
                             )
+
+                            val minWeekSize = minOf(
+                                weatherData.dailyData.time.size,
+                                weatherData.dailyData.weatherCode.size,
+                                weatherData.dailyData.temperatureMin.size,
+                                weatherData.dailyData.temperatureMax.size
+                            )
+
+                            val dailyForecasts = (0..<minWeekSize).map { index ->
+                                val date = LocalDate.parse(weatherData.dailyData.time[index])
+                                val locale = Locale.getDefault()
+                                DailyWeatherInfo(
+                                    date = date,
+                                    dateDisplayName = date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+                                    temperatureMin = weatherData.dailyData.temperatureMin[index],
+                                    temperatureMax = weatherData.dailyData.temperatureMax[index],
+                                    weatherIcon = WeatherCodeMapper.toIcon(weatherData.dailyData.weatherCode[index], true)
+                                )
+                            }
+
+                            _weeklyWeatherInfo.value = dailyForecasts.toImmutableList()
                         } catch (e: Exception) {
                             Log.e("LandingViewModel", "Error fetching weather data", e)
                         } finally {

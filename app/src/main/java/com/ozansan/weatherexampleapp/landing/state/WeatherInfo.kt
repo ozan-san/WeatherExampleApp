@@ -1,4 +1,4 @@
-package com.ozansan.weatherexampleapp.network
+package com.ozansan.weatherexampleapp.landing.state
 
 data class WeatherInfo(
     val temperature: Double,
