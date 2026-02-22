@@ -12,6 +12,7 @@ import com.ozansan.weatherexampleapp.geo.LocationClient
 import com.ozansan.weatherexampleapp.network.WeatherCodeMapper
 import com.ozansan.weatherexampleapp.network.WeatherInfo
 import com.ozansan.weatherexampleapp.network.WeatherRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,6 +29,7 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
     private val locationClient = LocationClient(app)
     private val geocodingRepository = GeocodingRepository(app)
     private val weatherRepository = WeatherRepository()
+    private var locationJob: Job? = null
 
     private val _locationAddress = MutableStateFlow("Awaiting location permission...")
     val locationAddress: StateFlow<String> = _locationAddress.asStateFlow()
@@ -39,6 +41,9 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
 
     private val _hasLocationPermission = MutableStateFlow(checkPermission())
     val hasLocationPermission: StateFlow<Boolean> = _hasLocationPermission.asStateFlow()
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     init {
         // If permission is already granted when the ViewModel is created, start listening.
@@ -56,16 +61,25 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun refresh() {
+        _isRefreshing.value = true
+        lastFetchedAddress = null // Force a weather refetch
+        startLocationUpdates()
+    }
+
     private fun startLocationUpdates() {
+        locationJob?.cancel() // Cancel any existing location listeners.
+
         if (!_hasLocationPermission.value) {
             _locationAddress.value = "Location permission not granted."
+            if (_isRefreshing.value) _isRefreshing.value = false
             return
         }
 
         _locationAddress.value = "Fetching location..."
 
         // The 'onEach' block will be called every time a new location is emitted.
-        locationClient.getLocationUpdates()
+        locationJob = locationClient.getLocationUpdates()
             .onEach { location ->
                 val addresses = geocodingRepository.reverseGeocode(location.latitude, location.longitude)
 
@@ -104,7 +118,7 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
                                         weatherIndex = index
                                         break
                                     }
-                                }
+                                 }
                             }
 
                             if (weatherIndex != -1) {
@@ -122,12 +136,17 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
 
                         } catch (e: Exception) {
                             Log.e("LandingViewModel", "Error fetching weather data", e)
+                        } finally {
+                            if (_isRefreshing.value) _isRefreshing.value = false
                         }
                     }
+                } else {
+                    if (_isRefreshing.value) _isRefreshing.value = false
                 }
             }
             .catch { e ->
                 _locationAddress.value = "Error fetching location: ${e.message}"
+                if (_isRefreshing.value) _isRefreshing.value = false
             }
             .launchIn(viewModelScope)
     }

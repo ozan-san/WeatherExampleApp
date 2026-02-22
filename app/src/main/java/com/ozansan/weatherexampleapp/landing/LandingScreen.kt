@@ -10,10 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LandingScreen(viewModel: LandingViewModel = viewModel()) {
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -37,6 +42,7 @@ fun LandingScreen(viewModel: LandingViewModel = viewModel()) {
     val hasLocationPermission by viewModel.hasLocationPermission.collectAsState()
     val locationAddress by viewModel.locationAddress.collectAsState()
     val weatherInfo by viewModel.weatherInfo.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
 
     LaunchedEffect(Unit) {
         if (!hasLocationPermission) {
@@ -44,50 +50,56 @@ fun LandingScreen(viewModel: LandingViewModel = viewModel()) {
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = { viewModel.refresh() }
     ) {
-        Text(
-            text = locationAddress,
-            modifier = Modifier.padding(top = 8.dp),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodySmall
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = locationAddress,
+                modifier = Modifier.padding(top = 8.dp),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodySmall
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        weatherInfo?.let {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = it.weatherDescription,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Icon(
-                    painter = painterResource(id = it.weatherIcon),
-                    contentDescription = it.weatherDescription,
-                    modifier = Modifier.size(128.dp)
-                )
-                Text(
-                    text = "${it.temperature}°C",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+            weatherInfo?.let {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = it.weatherDescription,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Icon(
+                        painter = painterResource(id = it.weatherIcon),
+                        contentDescription = it.weatherDescription,
+                        modifier = Modifier.size(128.dp)
+                    )
+                    Text(
+                        text = "${it.temperature}°C",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
-        }
 
 
-        // The button is only shown if permission is denied, allowing the user to retry.
-        if (!hasLocationPermission) {
-            Button(
-                onClick = {
-                    permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                },
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Request Location Permission")
+            // The button is only shown if permission is denied, allowing the user to retry.
+            if (!hasLocationPermission) {
+                Button(
+                    onClick = {
+                        permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                    },
+                    modifier = Modifier.padding(top = 16.dp)
+                ) {
+                    Text("Request Location Permission")
+                }
             }
         }
     }
