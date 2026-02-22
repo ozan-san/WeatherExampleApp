@@ -4,6 +4,7 @@ import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -52,60 +53,69 @@ fun LandingScreen(viewModel: LandingViewModel = viewModel()) {
         }
     }
 
-    PullToRefreshBox(
-        isRefreshing = isRefreshing,
-        onRefresh = { viewModel.refresh() }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    Box(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { viewModel.refresh() }
         ) {
-            Text(
-                text = locationAddress,
-                modifier = Modifier.padding(top = 8.dp),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodySmall
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = locationAddress,
+                    modifier = Modifier.padding(top = 8.dp),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            weatherInfo?.let {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = it.weatherDescription,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Icon(
-                        painter = painterResource(id = it.weatherIcon),
-                        contentDescription = it.weatherDescription,
-                        modifier = Modifier.size(128.dp)
-                    )
-                    Text(
-                        text = "${it.temperature}°C",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                weatherInfo?.let {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = it.weatherDescription,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Icon(
+                            painter = painterResource(id = it.weatherIcon),
+                            contentDescription = it.weatherDescription,
+                            modifier = Modifier.size(128.dp)
+                        )
+                        Text(
+                            text = "${it.temperature}°C",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
-            }
 
-            weeklyWeatherInfo?.let {
+                // The button is only shown if permission is denied, allowing the user to retry.
+                if (!hasLocationPermission) {
+                    Button(
+                        onClick = {
+                            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                        },
+                        modifier = Modifier.padding(top = 16.dp)
+                    ) {
+                        Text("Request Location Permission")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(120.dp)) // Spacer to prevent overlap
+            }
+        }
+
+        weeklyWeatherInfo?.let {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 64.dp)
+            ) {
                 LandingBottomBar(it)
-            }
-
-
-            // The button is only shown if permission is denied, allowing the user to retry.
-            if (!hasLocationPermission) {
-                Button(
-                    onClick = {
-                        permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                    },
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
-                    Text("Request Location Permission")
-                }
             }
         }
     }
