@@ -8,7 +8,19 @@ data class WeatherData(
     @SerializedName("hourly")
     val hourlyData: HourlyData,
     @SerializedName("daily")
-    val dailyData: DailyData
+    val dailyData: DailyData,
+    @SerializedName("current")
+    val current: CurrentWeather
+)
+
+data class CurrentWeather(
+    val time: String,
+    val interval: Int,
+    @SerializedName("temperature_2m")
+    val temperature: Double,
+    @SerializedName("weather_code")
+    val weatherCode: Int,
+    val rain: Double
 )
 
 data class HourlyData(

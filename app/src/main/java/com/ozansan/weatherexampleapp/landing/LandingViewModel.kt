@@ -20,9 +20,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
 class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
 
@@ -100,40 +97,16 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
                             val weatherData =
                                 weatherRepository.getWeather(location.latitude, location.longitude)
 
-                            val now = Calendar.getInstance()
-                            val currentHour = now.get(Calendar.HOUR_OF_DAY)
-                            val currentDay = now.get(Calendar.DAY_OF_YEAR)
+                            val sunrise = weatherData.dailyData.sunrise[0]
+                            val sunset = weatherData.dailyData.sunset[0]
+                            val isDay = WeatherCodeMapper.isDay(sunrise, sunset)
 
-                            var weatherIndex = -1
-                            val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
-                            for ((index, timeString) in weatherData.hourlyData.time.withIndex()) {
-                                val date = format.parse(timeString)
-                                if (date != null) {
-                                    val cal = Calendar.getInstance()
-                                    cal.time = date
-                                    if (cal.get(Calendar.HOUR_OF_DAY) == currentHour && cal.get(
-                                            Calendar.DAY_OF_YEAR
-                                        ) == currentDay
-                                    ) {
-                                        weatherIndex = index
-                                        break
-                                    }
-                                 }
-                            }
-
-                            if (weatherIndex != -1) {
-                                val weatherCode = weatherData.hourlyData.weatherCode[weatherIndex]
-                                val sunrise = weatherData.dailyData.sunrise[0]
-                                val sunset = weatherData.dailyData.sunset[0]
-                                val isDay = WeatherCodeMapper.isDay(sunrise, sunset)
-                                _weatherInfo.value = WeatherInfo(
-                                    temperature = weatherData.hourlyData.temperature[weatherIndex],
-                                    weatherDescription = WeatherCodeMapper.toText(weatherCode),
-                                    precipitationProbability = weatherData.hourlyData.precipitationProbability[weatherIndex],
-                                    weatherIcon = WeatherCodeMapper.toIcon(weatherCode, isDay)
-                                )
-                            }
-
+                            _weatherInfo.value = WeatherInfo(
+                                temperature = weatherData.current.temperature,
+                                weatherDescription = WeatherCodeMapper.toText(weatherData.current.weatherCode),
+                                precipitationProbability = weatherData.current.rain.toInt(),
+                                weatherIcon = WeatherCodeMapper.toIcon(weatherData.current.weatherCode, isDay)
+                            )
                         } catch (e: Exception) {
                             Log.e("LandingViewModel", "Error fetching weather data", e)
                         } finally {
