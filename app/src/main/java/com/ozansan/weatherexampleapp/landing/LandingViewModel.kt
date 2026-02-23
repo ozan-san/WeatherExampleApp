@@ -72,7 +72,6 @@ class LandingViewModel @Inject constructor(
 
     fun refresh() {
         _isRefreshing.value = true
-        lastFetchedAddress = null // Force a weather refetch
         startLocationUpdates()
     }
 
@@ -81,11 +80,9 @@ class LandingViewModel @Inject constructor(
 
         if (!_hasLocationPermission.value) {
             _locationAddress.value = "Location permission not granted."
-            if (_isRefreshing.value) _isRefreshing.value = false
+            _isRefreshing.value = false
             return
         }
-
-        _locationAddress.value = "Fetching location..."
 
         // The 'onEach' block will be called every time a new location is emitted.
         locationJob = locationRepository.getLocationUpdates()
@@ -104,7 +101,7 @@ class LandingViewModel @Inject constructor(
 
                 _locationAddress.value = newLocationAddress
 
-                if (newLocationAddress != lastFetchedAddress) {
+                if (newLocationAddress != lastFetchedAddress || _isRefreshing.value) {
                     lastFetchedAddress = newLocationAddress
                     viewModelScope.launch {
                         try {
@@ -156,16 +153,14 @@ class LandingViewModel @Inject constructor(
                         } catch (e: Exception) {
                             Log.e("LandingViewModel", "Error fetching weather data", e)
                         } finally {
-                            if (_isRefreshing.value) _isRefreshing.value = false
+                            _isRefreshing.value = false
                         }
                     }
-                } else {
-                    if (_isRefreshing.value) _isRefreshing.value = false
                 }
             }
             .catch { e ->
                 _locationAddress.value = "Error fetching location: ${e.message}"
-                if (_isRefreshing.value) _isRefreshing.value = false
+                _isRefreshing.value = false
             }
             .launchIn(viewModelScope)
     }
