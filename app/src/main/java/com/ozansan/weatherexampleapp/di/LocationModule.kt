@@ -16,9 +16,9 @@ abstract class LocationModule {
 
     @Binds
     @Singleton
-    abstract fun bindGeocodingService(geocodingUtilImpl: GeocodingRepositoryImpl): GeocodingRepository
+    abstract fun bindGeocodingRepository(geocodingUtilImpl: GeocodingRepositoryImpl): GeocodingRepository
 
     @Binds
     @Singleton
-    abstract fun bindLocationService(locationUtilImpl: LocationRepositoryImpl): LocationRepository
+    abstract fun bindLocationRepository(locationUtilImpl: LocationRepositoryImpl): LocationRepository
 }

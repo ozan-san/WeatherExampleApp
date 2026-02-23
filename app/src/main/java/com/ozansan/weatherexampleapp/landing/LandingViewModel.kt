@@ -7,7 +7,7 @@ import com.ozansan.weatherexampleapp.geo.GeocodingRepository
 import com.ozansan.weatherexampleapp.geo.LocationRepository
 import com.ozansan.weatherexampleapp.landing.state.DailyWeatherInfo
 import com.ozansan.weatherexampleapp.landing.state.WeatherInfo
-import com.ozansan.weatherexampleapp.network.WeatherCodeMapper
+import com.ozansan.weatherexampleapp.util.WeatherCodeMapper
 import com.ozansan.weatherexampleapp.network.WeatherRepository
 import com.ozansan.weatherexampleapp.permissions.PermissionChecker
 import dagger.hilt.android.lifecycle.HiltViewModel

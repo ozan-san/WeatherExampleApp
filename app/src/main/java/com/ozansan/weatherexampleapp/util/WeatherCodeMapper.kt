@@ -1,4 +1,4 @@
-package com.ozansan.weatherexampleapp.network
+package com.ozansan.weatherexampleapp.util
 
 import com.ozansan.weatherexampleapp.R
 import java.text.SimpleDateFormat
