@@ -1,7 +1,7 @@
 # Weather Example App
 ---
 
-![Weather app screenshot](/screenshots/light.png?raw=true)
+![Weather app screenshot](/screenshots/thumbnail.png?raw=true)
 
 An example weather app by Ozan Şan.
 
