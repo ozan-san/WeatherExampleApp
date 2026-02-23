@@ -1,24 +1,28 @@
 package com.ozansan.weatherexampleapp.geo
 
-// LocationClient.kt
-
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class LocationClient(context: Context) {
+@Singleton
+class LocationClient @Inject constructor(
+    @ApplicationContext private val context: Context
+) : LocationService {
 
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
     @SuppressLint("MissingPermission")
-    fun getLocationUpdates(): Flow<Location> {
+    override fun getLocationUpdates(): Flow<Location> {
         return callbackFlow {
             val locationRequest = LocationRequest.Builder(
                 Priority.PRIORITY_HIGH_ACCURACY,

@@ -1,18 +1,16 @@
 package com.ozansan.weatherexampleapp.landing
 
-import android.Manifest
-import android.app.Application
-import android.content.pm.PackageManager
 import android.util.Log
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ozansan.weatherexampleapp.geo.GeocodingRepository
-import com.ozansan.weatherexampleapp.geo.LocationClient
+import com.ozansan.weatherexampleapp.geo.GeocodingService
+import com.ozansan.weatherexampleapp.geo.LocationService
 import com.ozansan.weatherexampleapp.landing.state.DailyWeatherInfo
-import com.ozansan.weatherexampleapp.network.WeatherCodeMapper
 import com.ozansan.weatherexampleapp.landing.state.WeatherInfo
+import com.ozansan.weatherexampleapp.network.WeatherCodeMapper
 import com.ozansan.weatherexampleapp.network.WeatherRepository
+import com.ozansan.weatherexampleapp.permissions.PermissionChecker
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
@@ -26,12 +24,16 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import javax.inject.Inject
 
-class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
+@HiltViewModel
+class LandingViewModel @Inject constructor(
+    private val locationService: LocationService,
+    private val geocodingService: GeocodingService,
+    private val weatherRepository: WeatherRepository,
+    permissionChecker: PermissionChecker
+) : ViewModel() {
 
-    private val locationClient = LocationClient(app)
-    private val geocodingRepository = GeocodingRepository(app)
-    private val weatherRepository = WeatherRepository()
     private var locationJob: Job? = null
 
     private val _locationAddress = MutableStateFlow("Awaiting location permission...")
@@ -43,9 +45,10 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
     val weatherInfo: StateFlow<WeatherInfo?> = _weatherInfo.asStateFlow()
 
     private val _weeklyWeatherInfo = MutableStateFlow<ImmutableList<DailyWeatherInfo>?>(null)
-    val weeklyWeatherInfo: StateFlow<ImmutableList<DailyWeatherInfo>?> = _weeklyWeatherInfo.asStateFlow()
+    val weeklyWeatherInfo: StateFlow<ImmutableList<DailyWeatherInfo>?> =
+        _weeklyWeatherInfo.asStateFlow()
 
-    private val _hasLocationPermission = MutableStateFlow(checkPermission())
+    private val _hasLocationPermission = MutableStateFlow(permissionChecker.hasFineLocationPermission())
     val hasLocationPermission: StateFlow<Boolean> = _hasLocationPermission.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(false)
@@ -85,14 +88,16 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
         _locationAddress.value = "Fetching location..."
 
         // The 'onEach' block will be called every time a new location is emitted.
-        locationJob = locationClient.getLocationUpdates()
+        locationJob = locationService.getLocationUpdates()
             .onEach { location ->
-                val addresses = geocodingRepository.reverseGeocode(location.latitude, location.longitude)
+                val addresses =
+                    geocodingService.reverseGeocode(location.latitude, location.longitude)
 
                 val newLocationAddress = if (!addresses.isNullOrEmpty()) {
                     val address = addresses[0]
                     // Prioritize locality (city), fallback to adminArea (province/state), then subAdminArea.
-                    address.subAdminArea ?: address.adminArea ?: address.locality ?: "Unknown Location"
+                    address.subAdminArea ?: address.adminArea ?: address.locality
+                    ?: "Unknown Location"
                 } else {
                     "Could not find address for location."
                 }
@@ -114,7 +119,10 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
                                 temperature = weatherData.current.temperature,
                                 weatherDescription = WeatherCodeMapper.toText(weatherData.current.weatherCode),
                                 precipitationProbability = weatherData.current.rain.toInt(),
-                                weatherIcon = WeatherCodeMapper.toIcon(weatherData.current.weatherCode, isDay)
+                                weatherIcon = WeatherCodeMapper.toIcon(
+                                    weatherData.current.weatherCode,
+                                    isDay
+                                )
                             )
 
                             val minWeekSize = minOf(
@@ -129,14 +137,22 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
                                 val locale = Locale.getDefault()
                                 DailyWeatherInfo(
                                     date = date,
-                                    dateDisplayName = date.dayOfWeek.getDisplayName(TextStyle.SHORT, locale),
+                                    dateDisplayName = date.dayOfWeek.getDisplayName(
+                                        TextStyle.SHORT,
+                                        locale
+                                    ),
                                     temperatureMin = weatherData.dailyData.temperatureMin[index],
                                     temperatureMax = weatherData.dailyData.temperatureMax[index],
-                                    weatherIcon = WeatherCodeMapper.toIcon(weatherData.dailyData.weatherCode[index], true)
+                                    weatherIcon = WeatherCodeMapper.toIcon(
+                                        weatherData.dailyData.weatherCode[index],
+                                        true
+                                    )
                                 )
                             }
 
                             _weeklyWeatherInfo.value = dailyForecasts.toImmutableList()
+
+
                         } catch (e: Exception) {
                             Log.e("LandingViewModel", "Error fetching weather data", e)
                         } finally {
@@ -152,12 +168,5 @@ class LandingViewModel(private val app: Application) : AndroidViewModel(app) {
                 if (_isRefreshing.value) _isRefreshing.value = false
             }
             .launchIn(viewModelScope)
-    }
-
-    private fun checkPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            app,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
     }
 }
