@@ -1,5 +1,6 @@
 package com.ozansan.weatherexampleapp.network
 
+import com.ozansan.weatherexampleapp.network.model.WeatherData
 import javax.inject.Inject
 import javax.inject.Singleton
 

@@ -1,5 +1,6 @@
 package com.ozansan.weatherexampleapp.network
 
+import com.ozansan.weatherexampleapp.network.model.WeatherData
 import retrofit2.http.GET
 import retrofit2.http.Query
 
