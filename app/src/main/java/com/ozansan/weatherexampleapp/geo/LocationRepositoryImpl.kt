@@ -15,9 +15,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class LocationClient @Inject constructor(
-    @ApplicationContext private val context: Context
-) : LocationService {
+class LocationRepositoryImpl @Inject constructor(
+    @ApplicationContext context: Context
+) : LocationRepository {
 
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
@@ -25,8 +25,7 @@ class LocationClient @Inject constructor(
     override fun getLocationUpdates(): Flow<Location> {
         return callbackFlow {
             val locationRequest = LocationRequest.Builder(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                TimeUnit.SECONDS.toMillis(10)
+                Priority.PRIORITY_HIGH_ACCURACY, TimeUnit.SECONDS.toMillis(10)
             ).build()
 
             val locationCallback = object : com.google.android.gms.location.LocationCallback() {
@@ -37,9 +36,7 @@ class LocationClient @Inject constructor(
                 }
             }
             fusedLocationClient.requestLocationUpdates(
-                locationRequest,
-                locationCallback,
-                null /* Looper */
+                locationRequest, locationCallback, null /* Looper */
             )
             awaitClose {
                 fusedLocationClient.removeLocationUpdates(locationCallback)

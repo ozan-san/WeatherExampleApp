@@ -3,8 +3,8 @@ package com.ozansan.weatherexampleapp.landing
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ozansan.weatherexampleapp.geo.GeocodingService
-import com.ozansan.weatherexampleapp.geo.LocationService
+import com.ozansan.weatherexampleapp.geo.GeocodingRepository
+import com.ozansan.weatherexampleapp.geo.LocationRepository
 import com.ozansan.weatherexampleapp.landing.state.DailyWeatherInfo
 import com.ozansan.weatherexampleapp.landing.state.WeatherInfo
 import com.ozansan.weatherexampleapp.network.WeatherCodeMapper
@@ -28,8 +28,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LandingViewModel @Inject constructor(
-    private val locationService: LocationService,
-    private val geocodingService: GeocodingService,
+    private val locationRepository: LocationRepository,
+    private val geocodingRepository: GeocodingRepository,
     private val weatherRepository: WeatherRepository,
     permissionChecker: PermissionChecker
 ) : ViewModel() {
@@ -88,10 +88,10 @@ class LandingViewModel @Inject constructor(
         _locationAddress.value = "Fetching location..."
 
         // The 'onEach' block will be called every time a new location is emitted.
-        locationJob = locationService.getLocationUpdates()
+        locationJob = locationRepository.getLocationUpdates()
             .onEach { location ->
                 val addresses =
-                    geocodingService.reverseGeocode(location.latitude, location.longitude)
+                    geocodingRepository.reverseGeocode(location.latitude, location.longitude)
 
                 val newLocationAddress = if (!addresses.isNullOrEmpty()) {
                     val address = addresses[0]

@@ -1,9 +1,9 @@
 package com.ozansan.weatherexampleapp.di
 
+import com.ozansan.weatherexampleapp.geo.GeocodingRepositoryImpl
 import com.ozansan.weatherexampleapp.geo.GeocodingRepository
-import com.ozansan.weatherexampleapp.geo.GeocodingService
-import com.ozansan.weatherexampleapp.geo.LocationClient
-import com.ozansan.weatherexampleapp.geo.LocationService
+import com.ozansan.weatherexampleapp.geo.LocationRepositoryImpl
+import com.ozansan.weatherexampleapp.geo.LocationRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -16,9 +16,9 @@ abstract class LocationModule {
 
     @Binds
     @Singleton
-    abstract fun bindGeocodingService(geocodingRepository: GeocodingRepository): GeocodingService
+    abstract fun bindGeocodingService(geocodingUtilImpl: GeocodingRepositoryImpl): GeocodingRepository
 
     @Binds
     @Singleton
-    abstract fun bindLocationService(locationClient: LocationClient): LocationService
+    abstract fun bindLocationService(locationUtilImpl: LocationRepositoryImpl): LocationRepository
 }
